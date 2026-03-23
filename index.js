@@ -36,12 +36,14 @@ app.get('/api/geocode', async (req, res) => {
   }
 
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=18`;
 
     const data = await osmFetch(url);
 
     res.json({
-      direccion: data.display_name || 'No disponible',
+      direccion: data.display_name 
+  || data.address?.road 
+  || `${lat}, ${lon}`,
       ciudad: data.address?.city || data.address?.town || 'No disponible',
       pais: data.address?.country || 'No disponible'
     });
