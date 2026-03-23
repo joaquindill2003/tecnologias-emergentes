@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Geolocalización OSM</title>
+</head>
+
+<body>
+<h2>Consulta de Geolocalización — OpenStreetMap</h2>
+
+<fieldset>
+<legend>Origen</legend>
+Lat: <input id="oLat" value="-16.414005"/>
+Lon: <input id="oLon" value="-71.515773"/>
+<p id="dirOrigen"></p>
+</fieldset>
+
+<fieldset>
+<legend>Destino</legend>
+Lat: <input id="dLat" value="-16.406547"/>
+Lon: <input id="dLon" value="-71.553179"/>
+<p id="dirDestino"></p>
+</fieldset>
+
+<button onclick="consultar()">Consultar</button>
+
+<p>Distancia: <span id="dist">-</span> km</p>
+<p>Tiempo estimado: <span id="tiempo">-</span> min</p>
+
+<h3>Historial</h3>
+<ul id="historial"></ul>
+<script>
+async function consultar() {
+  try {
+    const oLat = v('oLat');
+    const oLon = v('oLon');
+    const dLat = v('dLat');
+    const dLon = v('dLon');
+
+    // Geocode
+    const gO = await api(`/api/geocode?lat=${oLat}&lon=${oLon}`);
+    const gD = await api(`/api/geocode?lat=${dLat}&lon=${dLon}`);
+
+    set('dirOrigen', gO.direccion || 'No disponible');
+    set('dirDestino', gD.direccion || 'No disponible');
+
+    // Ruta
+    const r = await api(`/api/ruta?oLat=${oLat}&oLon=${oLon}&dLat=${dLat}&dLon=${dLon}`);
+
+    if (r.error) {
+      set('dist', 'Error');
+      set('tiempo', 'Error');
+      alert(r.error);
+      return;
+    }
+
+    set('dist', r.distancia_km);
+    set('tiempo', r.duracion_min);
+
+    // ✅ ahora sí aquí
+    cargarHistorial();
+
+  } catch (e) {
+    console.error(e);
+    alert('Error al consultar API');
+  }
+}
+
+const api = async (url) => {
+  const res = await fetch(url);
+  return res.json();
+};
+
+async function cargarHistorial() {
+  try {
+    const data = await api('/api/historial');
+
+    const lista = document.getElementById('historial');
+    lista.innerHTML = '';
+
+    data.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `[${item.fecha}] Origen: (${item.oLat}, ${item.oLon}) → Destino: (${item.dLat}, ${item.dLon}) | ${item.distancia} km | ${item.duracion} min`;
+      lista.appendChild(li);
+    });
+
+  } catch (e) {
+    console.error('Error cargando historial', e);
+  }
+}
+
+const v = id => document.getElementById(id).value;
+const set = (id, val) => document.getElementById(id).textContent = val;
+
+
+cargarHistorial();
+</script>
+
+</body>
+</html>
