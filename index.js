@@ -77,11 +77,10 @@ app.get('/api/ruta', async (req, res) => {
     const duracion = (ruta.duration / 60).toFixed(1);
 
     // guardar en DB
-    await db.run(
-      `INSERT INTO historial (oLat, oLon, dLat, dLon, distancia, duracion)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [oLat, oLon, dLat, dLon, distancia, duracion]
-    );
+    db.prepare(`
+  INSERT INTO historial (oLat, oLon, dLat, dLon, distancia, duracion)
+  VALUES (?, ?, ?, ?, ?, ?)
+`).run(oLat, oLon, dLat, dLon, distancia, duracion);
 
     res.json({
       distancia_km: distancia,
@@ -95,9 +94,9 @@ app.get('/api/ruta', async (req, res) => {
 
 app.get('/api/historial', async (req, res) => {
   try {
-    const rows = await db.all(
-      `SELECT * FROM historial ORDER BY fecha DESC LIMIT 10`
-    );
+    const rows = db.prepare(
+  `SELECT * FROM historial ORDER BY fecha DESC LIMIT 10`
+).all();
     res.json(rows);
   } catch (e) {
     res.status(500).json({ error: e.message });

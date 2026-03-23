@@ -1,14 +1,9 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import Database from 'better-sqlite3';
 
-// abrir DB
-export const db = await open({
-  filename: './database.db',
-  driver: sqlite3.Database
-});
+const db = new Database('database.db');
 
-// crear tabla si no existe
-await db.exec(`
+// crear tabla
+db.prepare(`
 CREATE TABLE IF NOT EXISTS historial (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   oLat TEXT,
@@ -19,4 +14,6 @@ CREATE TABLE IF NOT EXISTS historial (
   duracion TEXT,
   fecha DATETIME DEFAULT CURRENT_TIMESTAMP
 )
-`);
+`).run();
+
+export { db };
